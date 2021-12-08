@@ -42,13 +42,12 @@ class VocalSkipper:
                     pprint(features)
                     print()
                     print(f"{self.current['item']['artists'][0]['name']}: {self.current['item']['name']}")
-                    print(f"{features['danceability']=}")
                     print()
 
                     if self._is_bad(features):
                         self.client.next_track()
 
-                    # self._unwanted_in_playlist()
+                    self._unwanted_in_playlist()
 
             except requests.exceptions.ReadTimeout:
                 sleep(10)
@@ -69,6 +68,7 @@ class VocalSkipper:
         good_tracks = []
         tracks = (item['track']['id'] for item in items)
 
+        # FIXME: get all tracks at once with audio_features(tracks)
         for track in tracks:
             features = self.client.audio_features(track)[0]
             if self._is_bad(features):
@@ -91,13 +91,13 @@ if __name__ == '__main__':
     scope = ["user-read-playback-state", "user-modify-playback-state"]
 
     filter_funcs = {
-        # "No singing": lambda feat:        feat['instrumentalness'] < 0.45,
+        "No singing": lambda feat:        feat['instrumentalness'] < 0.45,
         # "No live tracks": lambda feat:    feat['liveness'] < 0.5,
         # "No adrenaline": lambda feat:     feat['energy'] < 0.3,
         # "No dancing": lambda feat:        feat['danceability'] > 0.5,
         # "No downers": lambda feat:        feat['valence'] < 0.5,
         # "No smiling": lambda feat:        feat['valence'] > 0.3,
-        "No sitting around": lambda feat: feat['danceability'] < 0.5,
+        # "No sitting around": lambda feat: feat['danceability'] < 0.5,
     }
 
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
