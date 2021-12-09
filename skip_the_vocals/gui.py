@@ -1,25 +1,27 @@
 from tkinter import *
-from tkinter import ttk
-from tkinter.ttk import Frame
+from tkinter import font
 
+import colors
 from sliders import Sliders
 
-FONT = "Arial 12 bold"
 
 class Root(Tk):
     frm: Frame
 
     def __init__(self):
         super().__init__()
-        self.frm = ttk.Frame(self, padding=50)
-        self.frm.pack()
+        self.config(background=colors.BLACK)
 
-        # ttk.Label(self.frm, text="Filter your current playlist!").grid(column=0, row=0)
-        # ttk.Button(self.frm, text="Quit", command=self.destroy).grid(column=0, row=1)
 
+def set_up_window():
+    root = Root()
+    root.title("Spotify Filter")
+    FONT=font.Font(name="Helvetica Neue", size=24, weight="bold")
+    Label(root, text="Filter current playback", font=FONT, pady=20, fg=colors.WHITE, bg=colors.BLACK).pack()
+    sliders = Sliders(master=root)
+
+    root.mainloop()
 
 
 if __name__ == '__main__':
-    root = Root()
-    sliders = Sliders(master=root)
-    root.mainloop()
+    set_up_window()
