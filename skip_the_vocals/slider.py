@@ -13,6 +13,7 @@ class Slider(RangeSliderH):
         self.bar_left, self.bar_right = variables
         super().__init__(master,
                          variables,
+                         font_size=12,
                          padX=100,
                          Height=63,
                          valueSide='BOTTOM',

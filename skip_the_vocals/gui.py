@@ -2,7 +2,9 @@ from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import Frame
 
+from sliders import Sliders
 
+FONT = "Arial 12 bold"
 
 class Root(Tk):
     frm: Frame
@@ -19,8 +21,5 @@ class Root(Tk):
 
 if __name__ == '__main__':
     root = Root()
-
-    from sliders import Sliders
-    Sliders(master=root)
-
+    sliders = Sliders(master=root)
     root.mainloop()
