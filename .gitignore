@@ -1,1 +1,4 @@
-/skip_the_vocals/.env
+/spotifylter/.env
+/.idea/
+/venv/
+/skip_the_vocals/
