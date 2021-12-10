@@ -12,10 +12,12 @@ class Sliders(Frame):
     def __init__(self, **kw):
         super().__init__(**kw)
 
-        self.feature_bounds = {feature: {'range': limits, 'bound': (DoubleVar(), DoubleVar())}
+        self.feature_bounds = {feature: {'range': limits,
+                                         'bound': (DoubleVar(name=feature + "_lower"),
+                                                   DoubleVar(name=feature + "_upper"))}
                                for feature, limits in FEATURES.items()}
 
-        for i, (feature, values) in enumerate(self.feature_bounds.items()):
+        for feature, values in self.feature_bounds.items():
             values['bound'][0].set(values['range'][0])
             values['bound'][1].set(values['range'][1])
             frame = Frame(self, bg=colors.BLACK, padx=15)

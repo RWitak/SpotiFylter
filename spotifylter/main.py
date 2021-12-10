@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from spotipy.oauth2 import SpotifyOAuth
 
 
-class VocalSkipper:
+class Skipper:
     client: spotipy.Spotify
     filter_funcs: dict[str, Callable[[Any], Union[bool, Any]]] = None
     current = None
@@ -25,7 +25,7 @@ class VocalSkipper:
             try:
                 self.current = self.client.currently_playing()
 
-                if not self.current["is_playing"]:
+                if not self.current or not self.current["is_playing"]:
                     sleep(2)
                     continue
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     }
 
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
-    skipper = VocalSkipper(sp, filter_funcs)
+    skipper = Skipper(sp, filter_funcs)
     skipper.skip_unwanted()
 
 # bad_tracks = unwanted_in_playlist(current, filter_funcs, sp)
