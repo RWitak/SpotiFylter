@@ -1,4 +1,4 @@
 /spotifylter/.env
+/spotifylter/.cache
 /.idea/
 /venv/
-/skip_the_vocals/

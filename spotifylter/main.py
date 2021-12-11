@@ -1,20 +1,22 @@
 from pprint import pprint
 from time import sleep
-from typing import Callable, Any, Union
+from typing import Callable
 
 import requests.exceptions
 import spotipy
 from dotenv import load_dotenv
 from spotipy.oauth2 import SpotifyOAuth
 
+from spotifylter import features
+
 
 class Skipper:
     client: spotipy.Spotify
-    filter_funcs: dict[str, Callable[[Any], Union[bool, Any]]] = None
+    filter_funcs: set[Callable] = None
     current = None
 
-    def __init__(self, client, filter_funcs=None):
-        self.filter_funcs = filter_funcs if filter_funcs else {}
+    def __init__(self, client, feature_bounds: dict[str, tuple[float, float]] = None):
+        self.filter_funcs = create_filter_funcs(feature_bounds)
         self.client = client
         self.current = None
 
@@ -38,13 +40,13 @@ class Skipper:
                 else:
                     song_id = current_song_id
 
-                    features = self.client.audio_features(song_id)[0]
-                    pprint(features)
+                    feats = self.client.audio_features(song_id)[0]
+                    pprint(feats)
                     print()
                     print(f"{self.current['item']['artists'][0]['name']}: {self.current['item']['name']}")
                     print()
 
-                    if self._is_bad(features):
+                    if self._is_bad(feats):
                         self.client.next_track()
 
                     self._unwanted_in_playlist()
@@ -66,12 +68,11 @@ class Skipper:
 
         bad_tracks = []
         good_tracks = []
-        tracks = (item['track']['id'] for item in items)
+        tracks = tuple(item['track']['id'] for item in items)
 
-        # FIXME: get all tracks at once with audio_features(tracks)
-        for track in tracks:
-            features = self.client.audio_features(track)[0]
-            if self._is_bad(features):
+        all_feats = self.client.audio_features(tracks)
+        for feats, track in zip(all_feats, tracks):
+            if self._is_bad(feats):
                 bad_tracks.append(track)
             else:
                 good_tracks.append(track)
@@ -81,27 +82,30 @@ class Skipper:
 
         return bad_tracks
 
-    def _is_bad(self, features):
-        red_flags = [fltr(features) for fltr in self.filter_funcs.values()]
-        return any(red_flags)
+    def _is_bad(self, feats):
+        requirements = [fltr(feats) for fltr in self.filter_funcs]
+        return not all(requirements)
+
+
+def get_client() -> spotipy.Spotify:
+    load_dotenv()
+    scope = ["user-read-playback-state", "user-modify-playback-state"]
+    return spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
+
+
+def create_filter_funcs(feature_bounds: dict[str, tuple[float, float]]) -> set[Callable]:
+    filters = set()
+
+    for feature, (lower, upper) in feature_bounds.items():
+        if features.FEATURES[feature] != (lower, upper):
+            filters.add(lambda feats: lower <= feats[feature] <= upper)
+
+    return filters
 
 
 if __name__ == '__main__':
-    load_dotenv()
-    scope = ["user-read-playback-state", "user-modify-playback-state"]
-
-    filter_funcs = {
-        "No singing": lambda feat:        feat['instrumentalness'] < 0.45,
-        # "No live tracks": lambda feat:    feat['liveness'] < 0.5,
-        # "No adrenaline": lambda feat:     feat['energy'] < 0.3,
-        # "No dancing": lambda feat:        feat['danceability'] > 0.5,
-        # "No downers": lambda feat:        feat['valence'] < 0.5,
-        # "No smiling": lambda feat:        feat['valence'] > 0.3,
-        # "No sitting around": lambda feat: feat['danceability'] < 0.5,
-    }
-
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
-    skipper = Skipper(sp, filter_funcs)
+    spotipy_client = get_client()
+    skipper = Skipper(spotipy_client, {"valence": (0.3, 0.7)})
     skipper.skip_unwanted()
 
 # bad_tracks = unwanted_in_playlist(current, filter_funcs, sp)
