@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 
 import colors
-from features import FEATURES
+from features import FEATURE_BOUNDS
 from slider import Slider
 
 
@@ -15,7 +15,7 @@ class Sliders(Frame):
         self.feature_bounds = {feature: {'range': limits,
                                          'bound': (DoubleVar(name=feature + "_lower"),
                                                    DoubleVar(name=feature + "_upper"))}
-                               for feature, limits in FEATURES.items()}
+                               for feature, limits in FEATURE_BOUNDS.items()}
 
         for feature, values in self.feature_bounds.items():
             values['bound'][0].set(values['range'][0])

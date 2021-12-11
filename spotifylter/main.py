@@ -7,13 +7,17 @@ import spotipy
 from dotenv import load_dotenv
 from spotipy.oauth2 import SpotifyOAuth
 
-from spotifylter import features
+from spotifylter.features import FEATURE_BOUNDS
 
 
 class Skipper:
     client: spotipy.Spotify
     filter_funcs: set[Callable] = None
     current = None
+    pause = 0
+    filters_changed = False
+    new_bounds = None
+    song_id = -1
 
     def __init__(self, client, feature_bounds: dict[str, tuple[float, float]] = None):
         self.filter_funcs = create_filter_funcs(feature_bounds)
@@ -21,39 +25,37 @@ class Skipper:
         self.current = None
 
     def skip_unwanted(self):
-        song_id = -1
 
-        while True:
-            try:
-                self.current = self.client.currently_playing()
+        try:
+            self.current = self.client.currently_playing()
 
-                if not self.current or not self.current["is_playing"]:
-                    sleep(2)
-                    continue
+            if not self.current or not self.current["is_playing"]:
+                sleep(2)  # FIXME
+                return
 
-                current_song_id = self.current["item"]["id"]
+            current_song_id = self.current["item"]["id"]
 
-                if current_song_id == song_id:
-                    time_to_next = self.current['item']['duration_ms'] - self.current['progress_ms']
-                    sleep(min(2, time_to_next / 1000 + 10))
-                    continue
-                else:
-                    song_id = current_song_id
+            if current_song_id == self.song_id:
+                time_to_next = self.current['item']['duration_ms'] - self.current['progress_ms']
+                sleep(min(2, time_to_next / 1000 + 10))  # FIXME
+                return
+            else:
+                self.song_id = current_song_id
 
-                    feats = self.client.audio_features(song_id)[0]
-                    pprint(feats)
-                    print()
-                    print(f"{self.current['item']['artists'][0]['name']}: {self.current['item']['name']}")
-                    print()
+                feats = self.client.audio_features(self.song_id)[0]
+                pprint(feats)
+                print()
+                print(f"{self.current['item']['artists'][0]['name']}: {self.current['item']['name']}")
+                print()
 
-                    if self._is_bad(feats):
-                        self.client.next_track()
+                if self._is_bad(feats):
+                    self.client.next_track()
 
-                    self._unwanted_in_playlist()
+                self._unwanted_in_playlist()
 
-            except requests.exceptions.ReadTimeout:
-                sleep(10)
-                continue
+        except requests.exceptions.ReadTimeout as error:
+            sleep(10)  # FIXME
+            print(error)
 
     def _unwanted_in_playlist(self) -> list[int]:
         context = self.current['context']
@@ -86,6 +88,18 @@ class Skipper:
         requirements = [filter_func(feats) for filter_func in self.filter_funcs]
         return not all(requirements)
 
+    def update_bounds(self, feature_bounds: dict[str, tuple[float, float]]):
+        self.filter_funcs = create_filter_funcs(feature_bounds)
+
+    def loop(self):
+        while True:
+            if self.filters_changed:
+                self.update_bounds(self.new_bounds)
+                self.filters_changed = False
+
+            if self.pause == 0:
+                self.skip_unwanted()
+
 
 def get_client() -> spotipy.Spotify:
     load_dotenv()
@@ -97,7 +111,7 @@ def create_filter_funcs(feature_bounds: dict[str, tuple[float, float]]) -> set[C
     filters = set()
 
     for feature, (lower, upper) in feature_bounds.items():
-        if features.FEATURES[feature] != (lower, upper):
+        if FEATURE_BOUNDS[feature] != (lower, upper):
             filters.add(lambda feats: lower <= feats[feature] <= upper)
 
     return filters
@@ -106,9 +120,9 @@ def create_filter_funcs(feature_bounds: dict[str, tuple[float, float]]) -> set[C
 if __name__ == '__main__':
     spotipy_client = get_client()
     skipper = Skipper(spotipy_client, {"valence": (0.3, 0.7),
-                                       "energy":  (0.1, 0.5),
-                                       "instrumentalness":  (0.3, 1.0)})
-    skipper.skip_unwanted()
+                                       "energy": (0.1, 0.5),
+                                       "instrumentalness": (0.3, 1.0)})
+    skipper.loop()
 
 # bad_tracks = unwanted_in_playlist(current, filter_funcs, sp)
 # pprint(bad_tracks) if bad_tracks else True

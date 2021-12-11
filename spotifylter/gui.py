@@ -1,8 +1,11 @@
+import threading
 from tkinter import *
 from tkinter import font
 
 import colors
 from sliders import Sliders
+from spotifylter.features import FEATURE_BOUNDS
+from spotifylter.main import get_client, Skipper
 
 
 class Root(Tk):
@@ -32,6 +35,15 @@ def set_up_window(_root: Root):
 
 if __name__ == '__main__':
     # TODO: Multi-threading. A: tk mainloop, B: skipping loop
+    feature_bounds = FEATURE_BOUNDS.copy()
+
+    spotipy_client = get_client()
+    skipper = Skipper(spotipy_client)
+    back_end = threading.Thread(name="Back-End", target=skipper.skip_unwanted)
+
     root = Root()
     set_up_window(root)
-    root.mainloop()
+    front_end = threading.Thread(name="Front-End", target=root.mainloop)
+
+    back_end.start()
+    front_end.start()
