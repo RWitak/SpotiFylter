@@ -24,8 +24,8 @@ class Sliders(Frame):
             slider = Slider(frame,
                             (values['bound'][0], values['bound'][1]),
                             )
-            slider.bar_left.trace_add('write', slider.set_vals)
-            slider.bar_right.trace_add('write', slider.set_vals)
+            slider.bar_left.trace_add('write', slider.set_values)
+            slider.bar_right.trace_add('write', slider.set_values)
             slider.pack(fill=BOTH, side=RIGHT)
             ttk.Label(frame,
                       text=feature.replace('_', ' ').title(),

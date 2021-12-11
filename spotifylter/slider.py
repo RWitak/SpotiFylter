@@ -91,5 +91,5 @@ class Slider(RangeSliderH):
                          digit_precision='.2f')
         self.canv.config(highlightcolor=colors.WHITE)
 
-    def set_vals(self, var, idx, op):
+    def set_values(self, var, idx, op):
         print(f"{self.bar_left.get()}, {self.bar_right.get()}")

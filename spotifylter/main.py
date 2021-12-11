@@ -83,7 +83,7 @@ class Skipper:
         return bad_tracks
 
     def _is_bad(self, feats):
-        requirements = [fltr(feats) for fltr in self.filter_funcs]
+        requirements = [filter_func(feats) for filter_func in self.filter_funcs]
         return not all(requirements)
 
 
@@ -105,7 +105,9 @@ def create_filter_funcs(feature_bounds: dict[str, tuple[float, float]]) -> set[C
 
 if __name__ == '__main__':
     spotipy_client = get_client()
-    skipper = Skipper(spotipy_client, {"valence": (0.3, 0.7)})
+    skipper = Skipper(spotipy_client, {"valence": (0.3, 0.7),
+                                       "energy":  (0.1, 0.5),
+                                       "instrumentalness":  (0.3, 1.0)})
     skipper.skip_unwanted()
 
 # bad_tracks = unwanted_in_playlist(current, filter_funcs, sp)

@@ -13,11 +13,11 @@ class Root(Tk):
         self.config(background=colors.BLACK)
 
 
-def set_up_window(root: Root):
-    root.title("Spotify Filter")
+def set_up_window(_root: Root):
+    _root.title("Spotify Filter")
     _font = font.Font(name="Helvetica Neue", size=24, weight="bold")
     Label(
-        root,
+        _root,
         text="Filter current playback",
         font=_font,
         pady=20,
@@ -25,9 +25,9 @@ def set_up_window(root: Root):
         bg=colors.BLACK
         ).pack()
 
-    Sliders(master=root)
+    Sliders(master=_root)
 
-    root.mainloop()
+    _root.mainloop()
 
 
 if __name__ == '__main__':
