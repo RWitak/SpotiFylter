@@ -1,11 +1,13 @@
 from tkinter import *
+from typing import Callable, Any
+
 from RangeSlider.RangeSlider import RangeSliderH
 
 import colors
 
 
 class Slider(RangeSliderH):
-    label: Label
+    callback: Callable[..., Any]
     bar_left: DoubleVar
     bar_right: DoubleVar
 
@@ -73,10 +75,17 @@ class Slider(RangeSliderH):
             else:
                 return [imageH]
 
+    def print_values(self, var, idx, op):
+        print(f"{self.bar_left.get()}, {self.bar_right.get()}")
+
     def __init__(self,
                  master,
-                 variables: tuple[DoubleVar, DoubleVar]):
+                 variables: tuple[DoubleVar, DoubleVar],
+                 callback: Callable = print_values):
+
+        self.callback = callback
         self.bar_left, self.bar_right = variables
+
         super().__init__(master,
                          variables,
                          font_size=12,
@@ -90,6 +99,3 @@ class Slider(RangeSliderH):
                          line_s_color=colors.GREEN,
                          digit_precision='.2f')
         self.canv.config(highlightcolor=colors.WHITE)
-
-    def set_values(self, var, idx, op):
-        print(f"{self.bar_left.get()}, {self.bar_right.get()}")

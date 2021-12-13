@@ -1,5 +1,6 @@
+import time
+from multiprocessing.connection import Connection
 from pprint import pprint
-from time import sleep
 from typing import Callable
 
 import requests.exceptions
@@ -14,30 +15,29 @@ class Skipper:
     client: spotipy.Spotify
     filter_funcs: set[Callable] = None
     current = None
-    pause = 0
-    filters_changed = False
-    new_bounds = None
+    next_update = time.time_ns()
     song_id = -1
 
-    def __init__(self, client, feature_bounds: dict[str, tuple[float, float]] = None):
+    def __init__(self, client, feature_bounds: dict[str, tuple[float, float]] = None, receiver: Connection = None):
         self.filter_funcs = create_filter_funcs(feature_bounds)
         self.client = client
         self.current = None
+        self.receiver = receiver
 
-    def skip_unwanted(self):
+    def skip_unwanted(self, ignore_current_song=True):
 
         try:
             self.current = self.client.currently_playing()
 
             if not self.current or not self.current["is_playing"]:
-                sleep(2)  # FIXME
+                self.next_update = time.time_ns() + 1_000_000_000
                 return
 
             current_song_id = self.current["item"]["id"]
 
-            if current_song_id == self.song_id:
+            if ignore_current_song and current_song_id == self.song_id:
                 time_to_next = self.current['item']['duration_ms'] - self.current['progress_ms']
-                sleep(min(2, time_to_next / 1000 + 10))  # FIXME
+                self.next_update = time.time_ns() + min(2, time_to_next / 1000 + 10) * 1_000_000_000
                 return
             else:
                 self.song_id = current_song_id
@@ -54,7 +54,7 @@ class Skipper:
                 self._unwanted_in_playlist()
 
         except requests.exceptions.ReadTimeout as error:
-            sleep(10)  # FIXME
+            self.next_update = time.time_ns() + 5_000_000_000
             print(error)
 
     def _unwanted_in_playlist(self) -> list[int]:
@@ -64,13 +64,20 @@ class Skipper:
             print("Can't fetch unwanted tracks outside of a playlist context!")
             return []
 
-        items = self.client.playlist_items(self.current['context']['uri'],
-                                           additional_types=('track',)
-                                           )["items"]
+        # FIXME: Add other playback types like 'artist', 'album'
+        if context['type'] == 'playlist':
+            items = self.client.playlist_items(context['uri'],
+                                               additional_types=('track',)
+                                               )["items"]
+            tracks = [item['track']['id'] for item in items]
+        elif context['type'] == 'album':
+            items = self.client.album_tracks(context['uri'])
+            tracks = items['items']
+        else:
+            tracks = [self.client.current_playback()['item']['uri']]
 
         bad_tracks = []
         good_tracks = []
-        tracks = tuple(item['track']['id'] for item in items)
 
         all_feats = self.client.audio_features(tracks)
         for feats, track in zip(all_feats, tracks):
@@ -93,11 +100,17 @@ class Skipper:
 
     def loop(self):
         while True:
-            if self.filters_changed:
-                self.update_bounds(self.new_bounds)
-                self.filters_changed = False
+            if self.receiver and self.receiver.poll(timeout=0.05):
+                print("\nNEW BOUNDS:\n")
+                received = self.receiver.recv()
+                while self.receiver.poll(timeout=0.05):
+                    received = self.receiver.recv()
+                pprint(received)
+                self.update_bounds(received)
+                self.skip_unwanted(ignore_current_song=False)
+                continue
 
-            if self.pause == 0:
+            if self.next_update <= time.time_ns():
                 self.skip_unwanted()
 
 
@@ -110,9 +123,9 @@ def get_client() -> spotipy.Spotify:
 def create_filter_funcs(feature_bounds: dict[str, tuple[float, float]]) -> set[Callable]:
     filters = set()
 
-    for feature, (lower, upper) in feature_bounds.items():
-        if FEATURE_BOUNDS[feature] != (lower, upper):
-            filters.add(lambda feats: lower <= feats[feature] <= upper)
+    if feature_bounds and FEATURE_BOUNDS != feature_bounds.values():
+        filters.add(lambda feats: all([lower <= feats[feature] <= upper
+                                       for feature, (lower, upper) in feature_bounds.items()]))
 
     return filters
 

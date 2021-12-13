@@ -1,5 +1,7 @@
+from multiprocessing.connection import Connection
 from tkinter import *
 from tkinter import ttk
+from typing import Optional
 
 import colors
 from features import FEATURE_BOUNDS
@@ -7,15 +9,19 @@ from slider import Slider
 
 
 class Sliders(Frame):
+    sender: Optional[Connection]
     feature_bounds: dict
 
-    def __init__(self, **kw):
+    def __init__(self, sender: Connection = None, **kw):
         super().__init__(**kw)
 
+        self.sender = sender
         self.feature_bounds = {feature: {'range': limits,
                                          'bound': (DoubleVar(name=feature + "_lower"),
                                                    DoubleVar(name=feature + "_upper"))}
                                for feature, limits in FEATURE_BOUNDS.items()}
+
+        callback = self.bounds_changed
 
         for feature, values in self.feature_bounds.items():
             values['bound'][0].set(values['range'][0])
@@ -23,9 +29,10 @@ class Sliders(Frame):
             frame = Frame(self, bg=colors.BLACK, padx=15)
             slider = Slider(frame,
                             (values['bound'][0], values['bound'][1]),
+                            lambda: True
                             )
-            slider.bar_left.trace_add('write', slider.set_values)
-            slider.bar_right.trace_add('write', slider.set_values)
+            slider.bar_left.trace_add('write', callback)
+            slider.bar_right.trace_add('write', callback)
             slider.pack(fill=BOTH, side=RIGHT)
             ttk.Label(frame,
                       text=feature.replace('_', ' ').title(),
@@ -37,5 +44,8 @@ class Sliders(Frame):
 
         self.pack()
 
-    def set_feature_bounds(self, feature_bounds):
-        self.feature_bounds = feature_bounds
+    def bounds_changed(self, *args):
+        unpacked_fb = {feature: tuple(bound.get() for bound in values['bound'])
+                       for feature, values in self.feature_bounds.items()}
+
+        self.sender.send(unpacked_fb)
