@@ -1,0 +1,6 @@
+These values should be replaced by actual values
+and included in a .env file in the main directory:
+
+SPOTIPY_CLIENT_ID=abcdef12345678901234567890abcdef
+SPOTIPY_CLIENT_SECRET=abcdef12345678901234567890abcdef
+SPOTIPY_REDIRECT_URI=http://localhost:????
