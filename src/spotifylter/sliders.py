@@ -3,9 +3,9 @@ from tkinter import *
 from tkinter import ttk
 from typing import Optional
 
-import colors
-from features import FEATURE_BOUNDS
-from slider import Slider
+from spotifylter import colors
+from spotifylter.features import FEATURE_BOUNDS
+from spotifylter.slider import Slider
 
 
 class Sliders(Frame):

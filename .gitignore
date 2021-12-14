@@ -2,3 +2,5 @@
 /.idea/
 /venv/
 /src/spotifylter/.cache
+/src/SpotiFylter.egg-info/
+/dist/

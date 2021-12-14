@@ -3,10 +3,10 @@ from multiprocessing.connection import Connection
 from tkinter import *
 from tkinter import font
 
-import colors
-from sliders import Sliders
+from spotifylter import colors
 from spotifylter.features import FEATURE_BOUNDS
 from spotifylter.main import get_client, Skipper
+from spotifylter.sliders import Sliders
 
 
 class Root(Tk):

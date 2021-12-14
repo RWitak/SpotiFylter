@@ -3,7 +3,7 @@ from typing import Callable, Any
 
 from RangeSlider.RangeSlider import RangeSliderH
 
-import colors
+from spotifylter import colors
 
 
 class Slider(RangeSliderH):
