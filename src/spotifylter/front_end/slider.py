@@ -1,4 +1,4 @@
-from tkinter import *
+import tkinter as tk
 from typing import Callable, Any
 
 from RangeSlider.RangeSlider import RangeSliderH
@@ -8,13 +8,14 @@ from spotifylter import colors
 
 class Slider(RangeSliderH):
     callback: Callable[..., Any]
-    bar_left: DoubleVar
-    bar_right: DoubleVar
+    bar_left: tk.DoubleVar
+    bar_right: tk.DoubleVar
 
     # noinspection PyPep8Naming
     # noinspection PyUnboundLocalVariable
     def _RangeSliderH__addBar(self, pos, tempIdx=None):
-        """@ pos: position of the bar, ranged from (0,1)"""
+        """OVERRIDES PARENT METHOD TO ADD TEXT COLOR.
+        @ pos: position of the bar, ranged from (0,1)"""
         if pos < 0 or pos > 1:
             raise Exception("Pos error - Pos: " + str(pos))
         if self.draw == 'auto':
@@ -30,14 +31,14 @@ class Slider(RangeSliderH):
                 if self.valueSide == 'TOP':
                     y_value = y - RangeSliderH.BAR_RADIUS - RangeSliderH.FONT_SIZE / 2
                     value = pos * (self.max_val - self.min_val) + self.min_val
-                    id_value = self.canv.create_text(x, y_value, anchor=S,
+                    id_value = self.canv.create_text(x, y_value, anchor=tk.S,
                                                      text=format(value, RangeSliderH.DIGIT_PRECISION) + self.suffix,
                                                      font=(RangeSliderH.FONT_FAMILY, RangeSliderH.FONT_SIZE),
                                                      fill=colors.WHITE)
                 elif self.valueSide == 'BOTTOM':
                     y_value = y + RangeSliderH.BAR_RADIUS + RangeSliderH.FONT_SIZE / 2
                     value = pos * (self.max_val - self.min_val) + self.min_val
-                    id_value = self.canv.create_text(x, y_value, anchor=N,
+                    id_value = self.canv.create_text(x, y_value, anchor=tk.N,
                                                      text=format(value, RangeSliderH.DIGIT_PRECISION) + self.suffix,
                                                      font=(RangeSliderH.FONT_FAMILY, RangeSliderH.FONT_SIZE),
                                                      fill=colors.WHITE)
@@ -58,14 +59,14 @@ class Slider(RangeSliderH):
                 if self.valueSide == 'TOP':
                     y_value = y - self.ImageL.height() / 2 - RangeSliderH.FONT_SIZE / 2
                     value = pos * (self.max_val - self.min_val) + self.min_val
-                    id_value = self.canv.create_text(x, y_value, anchor=S,
+                    id_value = self.canv.create_text(x, y_value, anchor=tk.S,
                                                      text=format(value, RangeSliderH.DIGIT_PRECISION) + self.suffix,
                                                      font=(RangeSliderH.FONT_FAMILY, RangeSliderH.FONT_SIZE),
                                                      fill=colors.WHITE)
                 elif self.valueSide == 'BOTTOM':
                     y_value = y + self.ImageL.height() / 2 + RangeSliderH.FONT_SIZE / 2
                     value = pos * (self.max_val - self.min_val) + self.min_val
-                    id_value = self.canv.create_text(x, y_value, anchor=N,
+                    id_value = self.canv.create_text(x, y_value, anchor=tk.N,
                                                      text=format(value, RangeSliderH.DIGIT_PRECISION) + self.suffix,
                                                      font=(RangeSliderH.FONT_FAMILY, RangeSliderH.FONT_SIZE),
                                                      fill=colors.WHITE)
@@ -75,12 +76,12 @@ class Slider(RangeSliderH):
             else:
                 return [imageH]
 
-    def print_values(self, var, idx, op):
+    def print_values(self, *_):
         print(f"{self.bar_left.get()}, {self.bar_right.get()}")
 
     def __init__(self,
                  master,
-                 variables: tuple[DoubleVar, DoubleVar],
+                 variables: tuple[tk.DoubleVar, tk.DoubleVar],
                  callback: Callable = print_values):
 
         self.callback = callback
@@ -88,6 +89,9 @@ class Slider(RangeSliderH):
 
         super().__init__(master,
                          variables,
+                         line_width=3,
+                         bar_radius=8,
+                         font_family="Helvetica Neue",
                          font_size=12,
                          padX=30,
                          Height=63,
