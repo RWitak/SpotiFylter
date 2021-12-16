@@ -24,7 +24,7 @@ def print_track_info(current, feats) -> None:
 
     for name in FEATURE_NAMES:
         if name in feats.keys():
-            print(f"{name.replace('_', ' ').title()}: {feats[name]}")
+            print(f"{name.replace('_', ' ').title()}: {round(feats[name], 2):.2f}")
 
     playback_string = f"{current['item']['artists'][0]['name']}: " \
                       f"{current['item']['name']}"

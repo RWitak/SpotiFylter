@@ -36,11 +36,9 @@ def get_client() -> spotipy.Spotify:
                                                      redirect_uri=REDIRECT_URI))
 
 
-def run_headless() -> None:
+def run_headless(feature_bounds=None) -> None:
     spotipy_client = get_client()
-    skipper = Skipper(spotipy_client, {"valence": (0.3, 0.7),
-                                       "energy": (0.1, 0.5),
-                                       "instrumentalness": (0.3, 1.0)})
+    skipper = Skipper(spotipy_client, feature_bounds)
     skipper.loop()
 
 
