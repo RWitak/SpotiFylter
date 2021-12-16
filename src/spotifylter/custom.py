@@ -1,11 +1,11 @@
 CUSTOM_BOUNDS = {
     "acousticness":     (0.00, 1.00),
     "danceability":     (0.00, 1.00),
-    "energy":           (0.50, 1.00),
-    "instrumentalness": (0.00, 0.50),
+    "energy":           (0.00, 1.00),
+    "instrumentalness": (0.00, 1.00),
     "liveness":         (0.00, 1.00),
-    "speechiness":      (0.00, 0.30),
-    "valence":          (0.00, 0.75)
+    "speechiness":      (0.00, 1.00),
+    "valence":          (0.00, 1.00)
 }
 
 """
