@@ -11,6 +11,32 @@ class Slider(RangeSliderH):
     bar_left: tk.DoubleVar
     bar_right: tk.DoubleVar
 
+    def __init__(self,
+                 master,
+                 variables: tuple[tk.DoubleVar, tk.DoubleVar]):
+
+        self.bar_left, self.bar_right = variables
+
+        super().__init__(master,
+                         variables,
+                         line_width=3,
+                         bar_radius=8,
+                         font_family="Helvetica Neue",
+                         font_size=12,
+                         padX=30,
+                         Height=63,
+                         valueSide='BOTTOM',
+                         bgColor=colors.BLACK,
+                         bar_color_outer=colors.GREEN,
+                         bar_color_inner=colors.WHITE,
+                         line_color=colors.WHITE,
+                         line_s_color=colors.GREEN,
+                         digit_precision='.2f')
+        self.canv.config(highlightcolor=colors.WHITE)
+
+    def print_values(self, *_):
+        print(f"{self.bar_left.get()}, {self.bar_right.get()}")
+
     # noinspection PyPep8Naming
     # noinspection PyUnboundLocalVariable
     def _RangeSliderH__addBar(self, pos, tempIdx=None):
@@ -76,30 +102,34 @@ class Slider(RangeSliderH):
             else:
                 return [imageH]
 
-    def print_values(self, *_):
-        print(f"{self.bar_left.get()}, {self.bar_right.get()}")
+    # noinspection PyPep8Naming
+    # noinspection PyUnboundLocalVariable,PyShadowingBuiltins
+    def _RangeSliderH__checkSelection(self, x, y):
+        """
+        OVERRIDES PARENT METHOD TO BRANCH BEHAVIOUR FOR OVERLAPPING BARS.
+        To check if the position is inside the bounding rectangle of a Bar
+        Return [True, bar_index] or [False, None]
+        """
+        selected_indices = []
 
-    def __init__(self,
-                 master,
-                 variables: tuple[tk.DoubleVar, tk.DoubleVar],
-                 callback: Callable = print_values):
+        for idx in range(len(self.bars)):
+            id = self.bars[idx]["Ids"][0]
+            bbox = self.canv.bbox(id)
+            if bbox[0] < x < bbox[2] and bbox[1] < y < bbox[3]:
+                selected_indices.append(idx)
 
-        self.callback = callback
-        self.bar_left, self.bar_right = variables
+        if len(selected_indices) == 1:
+            return [True, selected_indices[0]]
+        if len(selected_indices) == 2:
+            return [True, self.__pick_bar(selected_indices, x)]
+        else:
+            return [False, None]
 
-        super().__init__(master,
-                         variables,
-                         line_width=3,
-                         bar_radius=8,
-                         font_family="Helvetica Neue",
-                         font_size=12,
-                         padX=30,
-                         Height=63,
-                         valueSide='BOTTOM',
-                         bgColor=colors.BLACK,
-                         bar_color_outer=colors.GREEN,
-                         bar_color_inner=colors.WHITE,
-                         line_color=colors.WHITE,
-                         line_s_color=colors.GREEN,
-                         digit_precision='.2f')
-        self.canv.config(highlightcolor=colors.WHITE)
+    def __pick_bar(self, selected_indices, x):
+        pos = self._RangeSliderH__calcPos(x)
+        left_d = pos - self.min_val
+        right_d = self.max_val - pos
+        if left_d > right_d:
+            return min(selected_indices)
+        else:
+            return max(selected_indices)
