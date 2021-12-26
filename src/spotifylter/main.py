@@ -25,7 +25,7 @@ def create_environment() -> None:
         with open(".env", 'a') as dot_env_file:
             for var in ENV_VARS:
                 value = input(var + ": ")
-                dot_env_file.write(f"{var}:{value}\n")
+                dot_env_file.write(f"{var}={value}\n")
 
         load_dotenv(".env")
 
