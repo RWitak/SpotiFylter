@@ -1,6 +1,8 @@
 # SpotiFylter
 _TOTAL PLAYBACK CONTROL_
 
+![Screenshot of graphical user interface](./assets/gui.jpg "The graphical user interface")
+
 ## Introduction
 
 **_SpotiFylter_** is your tool to gain total control over your listening experience.
